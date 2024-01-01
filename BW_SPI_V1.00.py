@@ -4,15 +4,16 @@
 def _debug(*flags):
     if "NONE" in _DEBUG: return False
     if "ALL"  in _DEBUG: return True
+    # search for one valid flag
     for f in flags:
         if f in _DEBUG:
-            # enabled
+            # at least one match
             return True
-    # no valid flags
+    # no valid flags were found -> False
     if flags:
         return False
-    # empty parameter -> always valid
-    # except if 'NONE' is explicit
+    # empty parameter -> always True
+    # except if 'NONE' is set explicitly -> always False
     return True
 
 # the spi class
@@ -21,24 +22,29 @@ class spi():
     """
         In a terminal use the "pinout"
         command to display the pin layout
-        of your raspberry pi.
+        of your raspberry pi. The pin
+        numbers below are the pin indices
+        that runs from 1 to 40. The buit-in
+        spi library is not used. However,
+        the pin numbers below are matching
+        the buit-in spi connections for
+        convenience.
     """
 
-    PIN_CS   = 24   # GPIO25 for Chip Select
-    PIN_SCK  = 23   # GPIO11 for Clock
-    PIN_MISO = 21   # GPIO09 for Master In Slave Out
-    PIN_MOSI = 19   # GPIO10 for Master Out Slave In
+    PIN_CS   = 24   # GPIO08 for Chip Select (buit-in value CS0)
+    PIN_SCK  = 23   # GPIO11 for Clock (buit-in value SCK)
+    PIN_MISO = 21   # GPIO09 for Master In Slave Out (buit-in value MISO)
+    PIN_MOSI = 19   # GPIO10 for Master Out Slave In (buit-in value MOSI)
 
     """
         The clock polarity and data phase depends
         on the slave device mode/configuration.
         check from the device data sheet.
-        for the RFID-RC522, CPOL = X and CPHA = X.
+        Most commonly used is CPOL = 0 and CPHA = 0.
 
         Also, the data bit width determines how many bit
-        should be send during one data transfer.
-        (the defaults used here is for the max7219
-        that drives the LED matrix module)
+        are send during one data transfer. for one byte at
+        a time, use the bit width value of 8.
     """
 
     CPOL = 0    # data loading on rising clock
@@ -52,13 +58,13 @@ class spi():
         # (the alternate designation mode is BCM)
         setmode(BOARD)
 
-        # avoid warnings when multiple script run concurently
         from RPi.GPIO import setwarnings
+        # avoid warnings when multiple script run concurently
         setwarnings(False)
 
-        # deactivate chip select
         from RPi.GPIO import setup, IN, OUT
         from RPi.GPIO import output, HIGH, LOW
+        # deactivate chip select (CS0 = 1)
         setup(self.PIN_CS, OUT)
         output(self.PIN_CS, HIGH)
 
